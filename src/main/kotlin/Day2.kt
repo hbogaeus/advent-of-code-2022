@@ -17,6 +17,15 @@ enum class Outcome(val score: Int) {
     WIN(6),
     DRAW(3),
     LOSE(0);
+
+    companion object {
+        fun fromChar(char: Char) = when (char) {
+            'X' -> LOSE
+            'Y' -> DRAW
+            'Z' -> WIN
+            else -> throw IllegalStateException()
+        }
+    }
 }
 
 fun main() {
@@ -24,11 +33,11 @@ fun main() {
 
     fileFromResource("day2/input.txt").forEachLine {
         val villainMove = Move.fromChar(it[0])
-        val yourMove = Move.fromChar(it[2])
+        val desiredOutcome = Outcome.fromChar(it[2])
 
-        val outcome = getOutcome(yourMove, villainMove)
+        val expectedMove = getExpectedMove(villainMove, desiredOutcome)
 
-        score += outcome.score + yourMove.score
+        score += desiredOutcome.score + expectedMove.score
     }
 
     println(score)
@@ -51,3 +60,21 @@ val outcomeArray = arrayOf(
 )
 
 private fun getOutcome(yourMove: Move, villainMove: Move) = outcomeArray[yourMove.ordinal][villainMove.ordinal]
+
+val moveArray = arrayOf(
+    arrayOf(
+        Move.PAPER,
+        Move.ROCK,
+        Move.SCISSORS
+    ), arrayOf(
+        Move.SCISSORS,
+        Move.PAPER,
+        Move.ROCK
+    ), arrayOf(
+        Move.ROCK,
+        Move.SCISSORS,
+        Move.PAPER
+    )
+)
+
+private fun getExpectedMove(villainMove: Move, desiredOutcome: Outcome) = moveArray[villainMove.ordinal][desiredOutcome.ordinal]
