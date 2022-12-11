@@ -5,6 +5,41 @@ class Directory(val name: String, val children: MutableList<Directory>, val pare
 }
 
 fun main() {
+    val (root, directories) = parseDirectoryStructure("day7/input.txt")
+
+    problem2(root, directories)
+
+}
+
+private const val TOTAL_SIZE = 70_000_000
+private const val SIZE_OF_UPDATE = 30_000_000
+
+private fun problem2(root: Directory, directories: Map<String, Directory>) {
+    val usedSpace = localSum(root)
+    val unusedSpace = TOTAL_SIZE - usedSpace
+    val spaceToFreeUp = SIZE_OF_UPDATE - unusedSpace
+
+    println("Unused space is $unusedSpace, required space to free up is $spaceToFreeUp")
+
+    var min = Int.MAX_VALUE
+    for (directory in directories.values) {
+        val localSum = localSum(directory)
+        println("${directory.name}: $localSum")
+
+        if (localSum > spaceToFreeUp && localSum < min) {
+            min = localSum
+        }
+    }
+    println(min)
+}
+
+private fun problem1(root: Directory) {
+    val conditionalSum = conditionalSum(root)
+    println(conditionalSum)
+}
+
+
+private fun parseDirectoryStructure(input: String): Pair<Directory, Map<String, Directory>> {
     val directories = mutableMapOf<String, Directory>();
     val root = Directory.create("/", null)
 
@@ -12,7 +47,7 @@ fun main() {
 
     directories["/"] = root
 
-    fileFromResource("day7/input.txt").forEachLine { line ->
+    fileFromResource(input).forEachLine { line ->
         val isCommand = line.startsWith("$")
 
         if (isCommand) {
@@ -25,9 +60,11 @@ fun main() {
                     "/" -> {
                         root
                     }
+
                     ".." -> {
                         currentDir.parent!!
                     }
+
                     else -> {
                         directories[dir]!!
                     }
@@ -51,9 +88,7 @@ fun main() {
             }
         }
     }
-
-    val conditionalSum = conditionalSum(root)
-    println(conditionalSum)
+    return Pair(root, directories)
 }
 
 fun localSum(directory: Directory): Int {
