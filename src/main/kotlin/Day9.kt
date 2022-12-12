@@ -32,12 +32,48 @@ enum class Direction {
 }
 
 fun main() {
+    problem2("day9/input.txt")
+}
+
+private fun problem2(filename: String) {
+    val rope = Array(10) {
+        Point(0, 0)
+    }
+
+    var visitedLocations = mutableSetOf(rope[rope.size - 1])
+
+    fileFromResource(filename).forEachLine { line ->
+        val (direction, amount) = parseInstruction(line)
+
+        repeat(amount) {
+            // Move head
+            rope[0] += direction.move()
+
+            // Update tail
+            for (i in 1 until rope.size) {
+                val previousKnot = rope[i - 1]
+                val currentKnot = rope[i]
+                val tailDirection = calculateTailMove(previousKnot, currentKnot)
+
+                rope[i] += tailDirection
+
+                if (i == rope.size - 1) {
+                    visitedLocations.add(rope[i])
+                }
+            }
+        }
+    }
+
+    println(visitedLocations.size)
+}
+
+private fun problem1(filename: String) {
     var head = Point(0, 0)
     var tail = Point(0, 0)
 
     var visitedLocations = mutableSetOf(tail)
 
-    fileFromResource("day9/input.txt").forEachLine { line ->
+    fileFromResource(filename).forEachLine { line ->
         val (direction, amount) = parseInstruction(line)
 
         repeat(amount) {
