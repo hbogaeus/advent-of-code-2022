@@ -1,4 +1,4 @@
-data class Monkey(var inspectCount: Int, val items: MutableList<Int>, val inspect: (Int) -> Int, val test: (i: Int) -> Int)
+data class Monkey(var inspectCount: Int, val items: MutableList<Int>, val inspect: (Int) -> Int, val divisor: Int, val trueMonkeyIndex: Int, val falseMonkeyIndex: Int)
 
 fun main() {
     fun parseInitialItems(line: String) =
@@ -30,18 +30,12 @@ fun main() {
         }
     }
 
+    fun parse(trueOutcome: String) = trueOutcome.substringAfterLast(" ").toInt()
+
     fun parseTest(test: String, trueOutcome: String, falseOutcome: String): (i: Int) -> Int {
-        val divisor = test.substringAfterLast(" ").toInt()
 
-        val trueOutcomeMonkey = trueOutcome.substringAfterLast(" ").toInt()
-        val falseOutcomeMonkey = falseOutcome.substringAfterLast(" ").toInt()
-
-        return {i: Int ->
-            if (i % divisor == 0)
-                trueOutcomeMonkey
-            else
-                falseOutcomeMonkey
-        }
+        val trueOutcomeMonkey = i(trueOutcome)
+        val falseOutcomeMonkey = i(falseOutcome)
     }
 
     fun parseMonkey(input: String): Monkey {
@@ -55,37 +49,51 @@ fun main() {
 
         val initialItems = parseInitialItems(lines[1])
         val operation = parseOperation(lines[2])
-        val test = parseTest(lines[3], lines[4], lines[5])
+        val divisor = parse(lines[3])
+        val trueMonkeyIndex = parse(lines[4])
+        val falseMonkeyIndex = parse(lines[5])
 
-        return Monkey(0, initialItems,  operation, test)
+        return Monkey(0, initialItems,  operation, divisor, trueMonkeyIndex, falseMonkeyIndex )
     }
 
-    val input = fileFromResource("day11/input.txt").readText()
+    fun problem2(filename: String) {
+        val input = fileFromResource(filename).readText()
 
-    val monkeys = input.split("\n\r\n").map(::parseMonkey)
+        val monkeys = input.split("\n\r\n").map(::parseMonkey)
 
-    repeat(20) {
-        for (monkey in monkeys) {
-            while (monkey.items.isNotEmpty()) {
-                val item = monkey.items.removeFirst()
-                monkey.inspectCount += 1
-                val inspectedItem = monkey.inspect(item)
-                val boredItem = inspectedItem / 3
-                val monkeyIndex = monkey.test(boredItem)
-                monkeys[monkeyIndex].items.add(boredItem)
+        repeat(20) {
+            for (monkey in monkeys) {
+                while (monkey.items.isNotEmpty()) {
+                    val item = monkey.items.removeFirst()
+                    monkey.inspectCount += 1
+                    val inspectedItem = monkey.inspect(item)
+
+                    val monkeyIndex =
+                        if (inspectedItem % monkey.divisor == 0) {
+                            monkey.trueMonkeyIndex
+                        } else {
+                            monkey.falseMonkeyIndex
+                        }
+
+                    // Make inspectedItem smaller here, but still react the same to monkey that the item is thrown to
+
+                    monkeys[monkeyIndex].items.add(inspectedItem)
+                }
             }
         }
+
+        for ((index, monkey) in monkeys.withIndex()) {
+            println("Monkey $index inspected items ${monkey.inspectCount}")
+        }
+
+        val monkeyBusinessLevel =
+            monkeys.sortedByDescending { it.inspectCount }
+                .take(2)
+                .map { it.inspectCount }
+                .reduce { acc, i -> acc * i }
+
+        println(monkeyBusinessLevel)
     }
 
-    for ((index, monkey) in monkeys.withIndex()) {
-        println("Monkey $index inspected items ${monkey.inspectCount}")
-    }
-
-    val monkeyBusinessLevel =
-        monkeys.sortedByDescending { it.inspectCount }
-            .take(2)
-            .map { it.inspectCount }
-            .reduce { acc, i -> acc * i }
-
-    println(monkeyBusinessLevel)
+    problem2("day11/example.txt")
 }
